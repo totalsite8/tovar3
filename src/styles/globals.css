@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+/* ── Dual theme tokens ─────────────────────────────────────────── */
+:root,
+:root[data-theme="light"] {
+  --bg: #faf7f2;
+  --bg-soft: #f2ede3;
+  --card: #ffffff;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --tint-product: rgba(249, 115, 22, 0.09);
+  --tint-service: rgba(139, 92, 246, 0.1);
+  --tint-ai: rgba(245, 158, 11, 0.12);
+  --tint-ok: rgba(16, 185, 129, 0.1);
+  --tint-bad: rgba(239, 68, 68, 0.08);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #16162a;
+  --bg-soft: #1e1e36;
+  --card: #252540;
+  --text-primary: #f5f5f0;
+  --text-secondary: #a0a0b0;
+  --border: #3a3a55;
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --tint-product: rgba(249, 115, 22, 0.15);
+  --tint-service: rgba(139, 92, 246, 0.17);
+  --tint-ai: rgba(245, 158, 11, 0.15);
+  --tint-ok: rgba(16, 185, 129, 0.15);
+  --tint-bad: rgba(239, 68, 68, 0.13);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-soft: var(--bg-soft);
+  --color-card: var(--card);
+  --color-ink: var(--text-primary);
+  --color-mute: var(--text-secondary);
+  --color-line: var(--border);
+  --color-product: #f97316;
+  --color-service: #8b5cf6;
+  --color-ai: #f59e0b;
+  --color-ok: #10b981;
+  --color-bad: #ef4444;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Unbounded", "Inter", ui-sans-serif, sans-serif;
+  --shadow-card: var(--shadow);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+  }
+  ::selection {
+    background: rgba(249, 115, 22, 0.28);
+  }
+  .surface {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
