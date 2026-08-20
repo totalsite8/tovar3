@@ -57,7 +57,7 @@ export function GiftBriefing() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[480px] px-5 pt-6">
+    <div className="mx-auto w-full max-w-[980px] px-4 pt-6 md:px-8">
       <button
         type="button"
         onClick={() => navigate(-1)}
@@ -72,19 +72,19 @@ export function GiftBriefing() {
         </span>
         <div>
           <h1 className="font-display text-[21px] font-bold leading-tight tracking-tight">
-            Подберу подарок парню
+            Подберу подарок
           </h1>
-          <p className="text-[12.5px] text-mute">3 быстрых вопроса — и ИИ всё поймёт</p>
+          <p className="text-[12.5px] text-mute">3 быстрых вопроса — и всё понятно</p>
         </div>
       </div>
 
       <ProgressBar
         value={(Math.min(step, GIFT_QUESTIONS.length) / GIFT_QUESTIONS.length) * 100}
         color="linear-gradient(90deg, #F97316, #F59E0B)"
-        className="mt-5"
+        className="mx-auto mt-5 w-full max-w-[760px]"
       />
 
-      <div className="mt-6 min-h-[280px]">
+      <div className="mx-auto mt-6 min-h-[280px] w-full max-w-[760px]">
         <AnimatePresence mode="wait">
           {!done && (
             <motion.div
@@ -99,7 +99,7 @@ export function GiftBriefing() {
               </p>
               <h2 className="mt-1.5 text-[19px] font-bold tracking-tight">{question.title}</h2>
 
-              <div className="mt-4 grid grid-cols-2 gap-2.5">
+              <div className="mt-4 grid grid-cols-2 gap-2.5 md:grid-cols-3">
                 {question.options.map((opt, i) => (
                   <motion.button
                     key={opt.value}

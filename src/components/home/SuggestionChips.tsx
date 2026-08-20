@@ -1,92 +1,116 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useAppStore, type SearchMode } from "../../store/useAppStore";
+import { useAppStore } from "../../store/useAppStore";
+import {
+  CHIP_GROUPS,
+  PRODUCT_CHIPS,
+  GIFT_CHIPS,
+  SERVICE_CHIPS,
+  type Chip,
+  type ChipKind,
+} from "../../data/suggestions";
 
-export interface Suggestion {
-  emoji: string;
-  label: string;
-  query: string;
-  mode: SearchMode;
-  route: string;
-}
+export const ALL_HOME_CHIPS: Chip[] = [...PRODUCT_CHIPS, ...GIFT_CHIPS, ...SERVICE_CHIPS];
 
-export const SUGGESTIONS: Suggestion[] = [
-  { emoji: "🎧", label: "Наушники до 3 000₽", query: "Наушники до 3 000₽", mode: "product", route: "/search" },
-  { emoji: "🪟", label: "Окна под ключ", query: "Окна под ключ", mode: "service", route: "/tender" },
-  { emoji: "🎁", label: "Подарок парню", query: "Подарок парню", mode: "gift", route: "/gift" },
-  { emoji: "📱", label: "Honor Magic 7 Pro", query: "Honor Magic 7 Pro", mode: "exact", route: "/search" },
-];
-
-export function SuggestionChips({ compact = false }: { compact?: boolean }) {
+export function useChipGo() {
   const navigate = useNavigate();
   const setSearch = useAppStore((s) => s.setSearch);
+  const setServiceScenario = useAppStore((s) => s.setServiceScenario);
   const [leaving, setLeaving] = useState<string | null>(null);
 
-  const go = (s: Suggestion) => {
-    console.log("[Aura] Suggestion tapped:", s.label);
-    setLeaving(s.label);
-    setSearch(s.query, s.mode);
-    window.setTimeout(() => navigate(s.route), 260);
+  const go = (chip: Chip) => {
+    console.log("[Aura] Chip tapped:", chip.label, "→", chip.route);
+    setLeaving(chip.label);
+    setSearch(chip.query, chip.kind === "service" ? "service" : chip.kind === "gift" ? "gift" : "product");
+    if (chip.kind === "service") setServiceScenario(chip.scenario ?? null);
+    window.setTimeout(() => {
+      navigate(chip.route);
+      setLeaving(null);
+    }, 260);
   };
 
-  if (compact) {
-    return (
-      <div className="flex gap-2 overflow-x-auto no-scrollbar">
-        {SUGGESTIONS.map((s) => (
-          <motion.button
-            key={s.label}
-            type="button"
-            whileTap={{ scale: 0.93 }}
-            onClick={() => go(s)}
-            className="surface flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-card/95 px-3 py-1.5 text-[12.5px] font-medium shadow-sm"
-          >
-            <span>{s.emoji}</span>
-            <span>{s.label}</span>
-          </motion.button>
-        ))}
-      </div>
-    );
-  }
+  return { go, leaving };
+}
+
+function ChipButton({ chip, leaving, onGo }: { chip: Chip; leaving: string | null; onGo: (c: Chip) => void }) {
+  const kindColor =
+    chip.kind === "service" ? "var(--color-service)" : chip.kind === "gift" ? "var(--color-ai)" : "var(--color-product)";
+  return (
+    <motion.button
+      type="button"
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.95 }}
+      animate={leaving === chip.label ? { y: -16, opacity: 0, scale: 0.9 } : { y: 0, opacity: 1, scale: 1 }}
+      onClick={() => onGo(chip)}
+      className="panel flex min-h-11 shrink-0 items-center gap-2 px-4 py-2.5 text-[14px] font-semibold"
+      style={{ borderLeft: `3px solid ${kindColor}` }}
+    >
+      <span className="text-lg leading-none">{chip.emoji}</span>
+      <span>{chip.label}</span>
+    </motion.button>
+  );
+}
+
+/** Grouped chips for the homepage: wrap on desktop, horizontal scroll on mobile */
+export function SuggestionChips({ groups = "all" }: { groups?: "all" | "services" }) {
+  const { go, leaving } = useChipGo();
+  const list = groups === "services" ? [CHIP_GROUPS[2]] : CHIP_GROUPS;
 
   return (
-    <section id="try" className="mx-auto w-full max-w-[480px] px-5 pt-14">
-      <motion.div
-        initial={{ opacity: 0, y: 18 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ type: "spring", stiffness: 100, damping: 16 }}
-      >
-        <h2 className="font-display text-[22px] font-bold tracking-tight">
-          Попробуйте прямо сейчас
-        </h2>
-        <p className="mt-1 text-sm text-mute">Один тап — и ИИ уже работает. Данные демо, смелее.</p>
-      </motion.div>
+    <section className="mx-auto w-full max-w-[1600px] px-4 pt-16 md:px-8">
+      <p className="microlabel">// примеры запросов</p>
+      <h2 className="mt-2 font-display text-[22px] font-bold tracking-tight md:text-[28px]">
+        Попробуйте прямо сейчас
+      </h2>
+      <p className="mt-1 text-sm text-mute">Один тап — и умный помощник уже работает. Данные демо, смелее.</p>
 
-      <div className="mt-5 flex flex-wrap gap-2.5">
-        {SUGGESTIONS.map((s, i) => (
-          <motion.button
-            key={s.label}
-            type="button"
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ type: "spring", stiffness: 120, damping: 16, delay: 0.08 * i }}
-            animate={
-              leaving === s.label
-                ? { y: -18, opacity: 0, scale: 0.9 }
-                : { y: 0, opacity: 1, scale: 1 }
-            }
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => go(s)}
-            className="surface flex min-h-11 items-center gap-2 rounded-full border border-line bg-card px-4 py-2.5 text-[14.5px] font-semibold shadow-card"
-          >
-            <span className="text-lg leading-none">{s.emoji}</span>
-            <span>{s.label}</span>
-          </motion.button>
+      <div className={groups === "services" ? "mt-6 space-y-5" : "mt-6 space-y-6"}>
+        {list.map((group) => (
+          <div key={group.id}>
+            <p className="microlabel mb-2.5">{group.label}</p>
+            {/* mobile: scroll; desktop: wrap */}
+            <div className="flex gap-2.5 overflow-x-auto pb-1 no-scrollbar md:flex-wrap md:overflow-visible md:pb-0">
+              {group.chips.map((chip, i) => (
+                <motion.div
+                  key={chip.label}
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ type: "spring", stiffness: 130, damping: 16, delay: 0.05 * i }}
+                  className="contents"
+                >
+                  <ChipButton chip={chip} leaving={leaving} onGo={go} />
+                </motion.div>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
     </section>
+  );
+}
+
+/** Compact scrollable row used above the search bar */
+export function ChipRow({ kind }: { kind?: ChipKind }) {
+  const { go } = useChipGo();
+  const chips = kind
+    ? ALL_HOME_CHIPS.filter((c) => c.kind === kind)
+    : ALL_HOME_CHIPS.slice(0, 8);
+  return (
+    <div className="flex gap-2 overflow-x-auto no-scrollbar">
+      {chips.map((chip) => (
+        <motion.button
+          key={chip.label}
+          type="button"
+          whileTap={{ scale: 0.93 }}
+          onClick={() => go(chip)}
+          className="panel flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full! px-3 py-1.5 text-[12.5px] font-medium"
+        >
+          <span>{chip.emoji}</span>
+          <span>{chip.label}</span>
+        </motion.button>
+      ))}
+    </div>
   );
 }

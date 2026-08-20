@@ -1,203 +1,233 @@
-export interface ProductOption {
-  id: string;
+export type ProductId = "airpods" | "gift" | "honor";
+
+export interface OptionRow {
+  ok: boolean;
+  text: string;
+}
+
+export interface Option {
   store: string;
   storeColor: string;
   price: number;
-  sellerRating: number;
   isPartner: boolean;
-  cashbackPoints: number;
-  finalPrice: number;
-  badge: string;
-  badgeTone: "ok" | "warn" | "neutral";
-  buttonNote: string;
-  delivery: string;
+  rows: OptionRow[];
+}
+
+export interface TrustRow {
+  label: string;
+  value: string;
+  tone: "ok" | "warn" | "bad" | "ai";
+}
+
+export interface CompareRow {
+  label: string;
+  cheap: string;
+  aura: string;
+  auraGood: boolean;
 }
 
 export interface Product {
-  id: string;
-  title: string;
+  id: ProductId;
   emoji: string;
   gradient: string;
-  totalFound: number;
-  options: ProductOption[];
-  aiVerdict: string;
+  title: string;
+  category: string;
+  sources: number;
+  verdict: string;
+  cheap: Option;
+  aura: Option & { cashback: number; final: number; badge: string };
+  mathNote: string;
+  cashbackLabel: string;
+  compare: CompareRow[];
+  trust: TrustRow[];
+  priceHistory: number[];
+  priceMin: { value: number; at: string };
+  priceNow: number;
 }
 
-export const PRODUCTS: Record<"sony" | "gift" | "honor", Product> = {
-  sony: {
-    id: "sony-wh1000xm4",
-    title: "Sony WH-1000XM4",
+/** deterministic 90-day price history with a dip around day ~60 */
+function genHistory(seed: number, start: number, min: number, end: number, days = 90): number[] {
+  const arr: number[] = [];
+  for (let i = 0; i < days; i++) {
+    const t = i / (days - 1);
+    const base = start + (end - start) * t;
+    const wave = Math.sin(i / 7 + seed) * 260 + Math.sin(i / 3.1 + seed * 2) * 130;
+    let v = base + wave;
+    if (i >= 54 && i <= 66) v = Math.min(v, min + Math.abs(i - 60) * 95);
+    arr.push(Math.round(v / 10) * 10);
+  }
+  return arr;
+}
+
+export const PRODUCTS: Record<ProductId, Product> = {
+  airpods: {
+    id: "airpods",
     emoji: "🎧",
-    gradient: "from-orange-400/80 via-rose-400/70 to-purple-500/70",
-    totalFound: 12,
-    aiVerdict:
-      "Рекомендую Ozon: да, на WB дешевле на 600₽, но с баллами Aura итоговая цена ниже на 600₽. Плюс у Ozon рейтинг продавца 4.9 против 4.2 — меньше риск подделки.",
-    options: [
-      {
-        id: "sony-ozon",
-        store: "Ozon",
-        storeColor: "#005BFF",
-        price: 24500,
-        sellerRating: 4.9,
-        isPartner: true,
-        cashbackPoints: 120,
-        finalPrice: 23300,
-        badge: "Оригинал проверен · Рейтинг продавца 4.9",
-        badgeTone: "ok",
-        buttonNote: "Перейдёт на сайт Ozon по партнёрской ссылке",
-        delivery: "Доставка завтра",
-      },
-      {
-        id: "sony-wb",
-        store: "Wildberries",
-        storeColor: "#CB11AB",
-        price: 23900,
-        sellerRating: 4.2,
-        isPartner: false,
-        cashbackPoints: 0,
-        finalPrice: 23900,
-        badge: "Без баллов · Рейтинг продавца 4.2",
-        badgeTone: "warn",
-        buttonNote: "Прямая ссылка на Wildberries",
-        delivery: "Доставка 2–3 дня",
-      },
-      {
-        id: "sony-dns",
-        store: "DNS",
-        storeColor: "#F9A825",
-        price: 25200,
-        sellerRating: 4.7,
-        isPartner: false,
-        cashbackPoints: 0,
-        finalPrice: 25200,
-        badge: "Без баллов · Рейтинг 4.7 · Самовывоз",
-        badgeTone: "neutral",
-        buttonNote: "Прямая ссылка на DNS",
-        delivery: "Самовывоз сегодня",
-      },
+    gradient: "from-cyan-400/80 via-sky-400/70 to-blue-500/70",
+    title: "AirPods Pro 3",
+    category: "Наушники",
+    sources: 14,
+    verdict:
+      "Самый дешёвый вариант — с оговорками: долгая доставка и нет официальной гарантии. С Aura на бумаге дороже, а по факту дешевле: кэшбэк падает в кошелёк сразу.",
+    cheap: {
+      store: "Ozon Global",
+      storeColor: "#005BFF",
+      price: 21990,
+      isPartner: false,
+      rows: [
+        { ok: false, text: "доставка 6–9 дней" },
+        { ok: false, text: "гарантия продавца 14 дней" },
+        { ok: false, text: "возврат за ваш счёт" },
+      ],
+    },
+    aura: {
+      store: "М.Видео",
+      storeColor: "#EA1B25",
+      price: 23490,
+      isPartner: true,
+      cashback: 2584,
+      final: 20906,
+      badge: "−1 084₽ vs самый дешёвый",
+      rows: [
+        { ok: true, text: "доставка завтра, слот 2 часа" },
+        { ok: true, text: "1 год, официальный дистрибьютор" },
+        { ok: true, text: "30 дней, бесплатный вывоз" },
+      ],
+    },
+    mathNote: "дешевле самого дешёвого на 1 084₽ — с официальной гарантией",
+    cashbackLabel: "кэшбэк 11% сразу",
+    compare: [
+      { label: "Цена на получении", cheap: "21 990₽", aura: "20 906₽ с кэшбеком", auraGood: true },
+      { label: "Кэшбэк Aura", cheap: "нет", aura: "+2 584₽ сразу", auraGood: true },
+      { label: "Доставка", cheap: "6–9 дней", aura: "завтра, слот 2 часа", auraGood: true },
+      { label: "Гарантия", cheap: "продавца, 14 дней", aura: "1 год, официальная", auraGood: true },
+      { label: "Возврат", cheap: "за ваш счёт", aura: "30 дней, бесплатный", auraGood: true },
+      { label: "Серийный номер", cheap: "не проверить", aura: "в официальной базе", auraGood: true },
     ],
+    trust: [
+      { label: "Цена к индексу 90 дней", value: "−16,3% · у исторического дна", tone: "ok" },
+      { label: "Надёжность партнёра", value: "98,2% в срок · 412 сделок", tone: "ok" },
+      { label: "Серийный номер", value: "проходит по официальной базе", tone: "ok" },
+      { label: "Риск серого импорта", value: "высокий в самом дешёвом варианте", tone: "bad" },
+      { label: "Выплата кэшбека", value: "мгновенно в кошелёк Aura", tone: "ai" },
+    ],
+    priceHistory: genHistory(1.7, 26800, 21990, 23490),
+    priceMin: { value: 21990, at: "3 нед. назад" },
+    priceNow: 23490,
   },
 
   gift: {
-    id: "gift-gamer",
-    title: "Подарок для геймера",
-    emoji: "🎁",
+    id: "gift",
+    emoji: "🎮",
     gradient: "from-emerald-400/80 via-cyan-400/70 to-blue-500/70",
-    totalFound: 9,
-    aiVerdict:
-      "Рекомендую геймпад Xbox: универсальный и практичный подарок до 3 000₽. С баллами Aura выходит 1 350₽ — на 450₽ дешевле, чем везде. Клавиатура Logitech тоже хороша, но у геймера обычно уже есть своя.",
-    options: [
-      {
-        id: "gift-gamepad",
-        store: "Ozon",
-        storeColor: "#005BFF",
-        price: 1800,
-        sellerRating: 4.8,
-        isPartner: true,
-        cashbackPoints: 45,
-        finalPrice: 1350,
-        badge: "Оригинал проверен · Рейтинг продавца 4.8",
-        badgeTone: "ok",
-        buttonNote: "Перейдёт на сайт Ozon по партнёрской ссылке",
-        delivery: "Доставка завтра",
-      },
-      {
-        id: "gift-keyboard",
-        store: "DNS",
-        storeColor: "#F9A825",
-        price: 2500,
-        sellerRating: 4.7,
-        isPartner: false,
-        cashbackPoints: 0,
-        finalPrice: 2500,
-        badge: "Без баллов · Рейтинг 4.7 · Самовывоз",
-        badgeTone: "neutral",
-        buttonNote: "Прямая ссылка на DNS",
-        delivery: "Самовывоз сегодня",
-      },
-      {
-        id: "gift-steam",
-        store: "Яндекс.Маркет",
-        storeColor: "#FFCC00",
-        price: 2000,
-        sellerRating: 4.6,
-        isPartner: true,
-        cashbackPoints: 40,
-        finalPrice: 1600,
-        badge: "Цифровой код · придёт за 5 минут",
-        badgeTone: "ok",
-        buttonNote: "Перейдёт на Яндекс.Маркет по партнёрской ссылке",
-        delivery: "Мгновенно",
-      },
+    title: "Геймпад Xbox Wireless",
+    category: "Подарок · геймеру",
+    sources: 12,
+    verdict:
+      "Дешёвый вариант едет из-за рубежа две недели и без нормальной гарантии — для подарка рискованно. У партнёра Aura дороже на витрине, но кэшбэк делает его выгоднее, и приедет завтра.",
+    cheap: {
+      store: "Ozon Global",
+      storeColor: "#005BFF",
+      price: 1450,
+      isPartner: false,
+      rows: [
+        { ok: false, text: "доставка 10–14 дней" },
+        { ok: false, text: "гарантия продавца 7 дней" },
+        { ok: false, text: "возврат за ваш счёт" },
+      ],
+    },
+    aura: {
+      store: "М.Видео",
+      storeColor: "#EA1B25",
+      price: 1800,
+      isPartner: true,
+      cashback: 420,
+      final: 1380,
+      badge: "−70₽ vs самый дешёвый",
+      rows: [
+        { ok: true, text: "доставка завтра, слот 2 часа" },
+        { ok: true, text: "1 год, официальная гарантия" },
+        { ok: true, text: "30 дней, бесплатный возврат" },
+      ],
+    },
+    mathNote: "дешевле самого дешёвого на 70₽ — и приедет к празднику",
+    cashbackLabel: "кэшбэк 23% сразу",
+    compare: [
+      { label: "Цена на получении", cheap: "1 450₽", aura: "1 380₽ с кэшбеком", auraGood: true },
+      { label: "Кэшбэк Aura", cheap: "нет", aura: "+420₽ сразу", auraGood: true },
+      { label: "Доставка", cheap: "10–14 дней", aura: "завтра, слот 2 часа", auraGood: true },
+      { label: "Гарантия", cheap: "продавца, 7 дней", aura: "1 год, официальная", auraGood: true },
+      { label: "Возврат", cheap: "за ваш счёт", aura: "30 дней, бесплатный", auraGood: true },
+      { label: "Серийный номер", cheap: "не проверить", aura: "в официальной базе", auraGood: true },
     ],
+    trust: [
+      { label: "Цена к индексу 90 дней", value: "−12,8% · близко ко дну", tone: "ok" },
+      { label: "Надёжность партнёра", value: "97,9% в срок · 388 сделок", tone: "ok" },
+      { label: "Серийный номер", value: "проходит по базе Microsoft", tone: "ok" },
+      { label: "Риск серого импорта", value: "высокий в самом дешёвом варианте", tone: "bad" },
+      { label: "Выплата кэшбека", value: "мгновенно в кошелёк Aura", tone: "ai" },
+    ],
+    priceHistory: genHistory(3.1, 2150, 1450, 1800),
+    priceMin: { value: 1450, at: "5 нед. назад" },
+    priceNow: 1800,
   },
 
   honor: {
-    id: "honor-magic7-pro",
-    title: "Honor Magic7 Pro 12/512",
+    id: "honor",
     emoji: "📱",
     gradient: "from-indigo-400/80 via-sky-400/70 to-teal-400/70",
-    totalFound: 14,
-    aiVerdict:
-      "Рекомендую Ozon: цена выше WB на 1 000₽, но баллы Aura перекрывают разницу — итог 59 990₽ против 61 990₽. Продавец официальный, гарантия 12 месяцев.",
-    options: [
-      {
-        id: "honor-ozon",
-        store: "Ozon",
-        storeColor: "#005BFF",
-        price: 62990,
-        sellerRating: 4.9,
-        isPartner: true,
-        cashbackPoints: 300,
-        finalPrice: 59990,
-        badge: "Официальный продавец · Гарантия 12 мес",
-        badgeTone: "ok",
-        buttonNote: "Перейдёт на сайт Ozon по партнёрской ссылке",
-        delivery: "Доставка завтра",
-      },
-      {
-        id: "honor-wb",
-        store: "Wildberries",
-        storeColor: "#CB11AB",
-        price: 61990,
-        sellerRating: 4.3,
-        isPartner: false,
-        cashbackPoints: 0,
-        finalPrice: 61990,
-        badge: "Без баллов · Рейтинг продавца 4.3",
-        badgeTone: "warn",
-        buttonNote: "Прямая ссылка на Wildberries",
-        delivery: "Доставка 2–4 дня",
-      },
-      {
-        id: "honor-citilink",
-        store: "Ситилинк",
-        storeColor: "#EA1B25",
-        price: 63490,
-        sellerRating: 4.8,
-        isPartner: false,
-        cashbackPoints: 0,
-        finalPrice: 63490,
-        badge: "Без баллов · Рейтинг 4.8 · Самовывоз",
-        badgeTone: "neutral",
-        buttonNote: "Прямая ссылка на Ситилинк",
-        delivery: "Самовывоз сегодня",
-      },
+    title: "Honor Magic7 Pro 12/512",
+    category: "Смартфоны",
+    sources: 16,
+    verdict:
+      "Самый дешёвый вариант — серый импорт без местной гарантии: ремонт в случае чего за ваш счёт. С кэшбеком Aura партнёрский смартфон выходит дешевле и с гарантией 12 месяцев.",
+    cheap: {
+      store: "Ozon Global",
+      storeColor: "#005BFF",
+      price: 56990,
+      isPartner: false,
+      rows: [
+        { ok: false, text: "доставка 10–14 дней" },
+        { ok: false, text: "гарантия продавца 30 дней" },
+        { ok: false, text: "сервис за ваш счёт" },
+      ],
+    },
+    aura: {
+      store: "М.Видео",
+      storeColor: "#EA1B25",
+      price: 62990,
+      isPartner: true,
+      cashback: 7300,
+      final: 55690,
+      badge: "−1 300₽ vs самый дешёвый",
+      rows: [
+        { ok: true, text: "доставка завтра, слот 2 часа" },
+        { ok: true, text: "12 мес, официальный ввоз" },
+        { ok: true, text: "30 дней, бесплатный возврат" },
+      ],
+    },
+    mathNote: "дешевле самого дешёвого на 1 300₽ — с гарантией 12 месяцев",
+    cashbackLabel: "кэшбэк 11,6% сразу",
+    compare: [
+      { label: "Цена на получении", cheap: "56 990₽", aura: "55 690₽ с кэшбеком", auraGood: true },
+      { label: "Кэшбэк Aura", cheap: "нет", aura: "+7 300₽ сразу", auraGood: true },
+      { label: "Доставка", cheap: "10–14 дней", aura: "завтра, слот 2 часа", auraGood: true },
+      { label: "Гарантия", cheap: "продавца, 30 дней", aura: "12 мес, официальная", auraGood: true },
+      { label: "Возврат", cheap: "за ваш счёт", aura: "30 дней, бесплатный", auraGood: true },
+      { label: "Серийный номер", cheap: "не проверить", aura: "в официальной базе", auraGood: true },
     ],
+    trust: [
+      { label: "Цена к индексу 90 дней", value: "−9,4% · ниже среднего", tone: "ok" },
+      { label: "Надёжность партнёра", value: "98,6% в срок · 501 сделка", tone: "ok" },
+      { label: "Серийный номер", value: "проходит по базе Honor", tone: "ok" },
+      { label: "Риск серого импорта", value: "высокий в самом дешёвом варианте", tone: "bad" },
+      { label: "Выплата кэшбека", value: "мгновенно в кошелёк Aura", tone: "ai" },
+    ],
+    priceHistory: genHistory(5.3, 71990, 56990, 62990),
+    priceMin: { value: 56990, at: "2 нед. назад" },
+    priceNow: 62990,
   },
 };
-
-export const EXTRA_VARIANTS: { store: string; price: number; note: string }[] = [
-  { store: "Мегамаркет", price: 24100, note: "Бонусы СберСпасибо" },
-  { store: "Ozon (продавец 4.6)", price: 23750, note: "Без проверки оригинала" },
-  { store: "Яндекс.Маркет", price: 24890, note: "Сплит на 4 платежа" },
-  { store: "Казань-Экспресс", price: 23400, note: "Доставка 5 дней" },
-  { store: "DNS (уценка)", price: 21990, note: "Вскрытая упаковка" },
-  { store: "Ситилинк", price: 25490, note: "Самовывоз" },
-  { store: "Wildberries (продавец 3.9)", price: 22800, note: "⚠️ Низкий рейтинг" },
-  { store: "Ozon Global", price: 20900, note: "Доставка 14 дней из-за рубежа" },
-  { store: "Авито (новый)", price: 19500, note: "Без гарантии магазина" },
-];
 
 export function formatRub(n: number): string {
   return `${Math.round(n).toLocaleString("ru-RU")}₽`;

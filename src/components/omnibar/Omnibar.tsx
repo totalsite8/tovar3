@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Mic, ArrowUp, SendHorizonal } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
-import { SuggestionChips } from "../home/SuggestionChips";
+import { ChipRow } from "../home/SuggestionChips";
 
-const SERVICE_WORDS = ["окн", "ремонт", "установ", "балкон", "монтаж", "тендер", "подряд", "двер", "потолок", "сантех", "квартир"];
-const GIFT_WORDS = ["подарок", "подар", "парню", "девушк", "маме", "папе", "другу", "женой", "мужу"];
+const SERVICE_WORDS = ["окн", "балкон", "ремонт", "установ", "монтаж", "подряд", "переезд", "грузчик", "уборк", "клининг", "мебел", "собрат", "фотограф", "холст", "печат", "услуг"];
+const GIFT_WORDS = ["подарок", "подар", "парню", "девушк", "маме", "папе", "другу", "жене", "мужу"];
 
 type Intent = "product" | "gift" | "service";
 
@@ -20,13 +20,13 @@ function detectIntent(q: string): Intent {
 const GLOW: Record<Intent, { ring: string; soft: string; solid: string }> = {
   product: { ring: "rgba(249,115,22,.65)", soft: "rgba(249,115,22,.22)", solid: "#F97316" },
   service: { ring: "rgba(139,92,246,.65)", soft: "rgba(139,92,246,.22)", solid: "#8B5CF6" },
-  gift: { ring: "rgba(249,115,22,.65)", soft: "rgba(249,115,22,.22)", solid: "#F97316" },
+  gift: { ring: "rgba(245,158,11,.65)", soft: "rgba(245,158,11,.22)", solid: "#F59E0B" },
 };
 
 const READY_TEXT: Record<Intent, string> = {
-  product: "Похоже, это товар → сравню цены и начислю баллы",
-  gift: "Похоже, это подарок → соберу мини-бриф за 30 секунд",
-  service: "Похоже, это услуга → запущу тендер среди подрядчиков",
+  product: "Похоже, это товар → сравню цены и найду кэшбэк",
+  gift: "Похоже, это подарок → задам 3 коротких вопроса",
+  service: "Похоже, это услуга → найду подрядчиков и сравню цены",
 };
 
 export function Omnibar() {
@@ -70,7 +70,7 @@ export function Omnibar() {
     setStatus("routing");
     const route = intent === "service" ? "/tender" : intent === "gift" ? "/gift" : "/search";
     const mode = intent === "service" ? "service" : intent === "gift" ? "gift" : "product";
-    console.log("[Aura] Omnibar intent:", intent, "→ route:", route);
+    console.log("[Aura] Search intent:", intent, "→ route:", route);
     setSearch(q, mode);
     routeTimer.current = setTimeout(() => {
       navigate(route);
@@ -81,7 +81,8 @@ export function Omnibar() {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40">
-      <div className="mx-auto w-full max-w-[480px] px-4">
+      {/* mobile: near full width · desktop: wide centered bar */}
+      <div className="mx-auto w-[calc(100%-2rem)] md:w-full md:max-w-3xl md:px-0">
         {/* micro-status line */}
         <div className="flex h-6 items-end justify-center pb-1">
           <AnimatePresence mode="wait">
@@ -91,13 +92,10 @@ export function Omnibar() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="rounded-full border border-line bg-card/95 px-3 py-0.5 text-[11px] font-medium text-mute shadow-sm backdrop-blur"
+                className="panel rounded-full px-3 py-0.5 text-[11px] font-medium text-mute"
               >
                 Определяю тип запроса
-                <motion.span
-                  animate={{ opacity: [0.2, 1, 0.2] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                >
+                <motion.span animate={{ opacity: [0.2, 1, 0.2] }} transition={{ duration: 1, repeat: Infinity }}>
                   ...
                 </motion.span>
               </motion.span>
@@ -108,7 +106,7 @@ export function Omnibar() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="rounded-full border border-line bg-card/95 px-3 py-0.5 text-[11px] font-semibold shadow-sm backdrop-blur"
+                className="panel rounded-full px-3 py-0.5 text-[11px] font-semibold"
                 style={{ color: glow?.solid }}
               >
                 {status === "routing" ? "Запускаю…" : READY_TEXT[intent]}
@@ -119,7 +117,7 @@ export function Omnibar() {
 
         {/* suggestion chips */}
         <div className="pb-2">
-          <SuggestionChips compact />
+          <ChipRow />
         </div>
 
         {/* the bar */}
@@ -129,12 +127,12 @@ export function Omnibar() {
               e.preventDefault();
               submit();
             }}
-            className="surface flex h-14 items-center gap-1.5 rounded-full border bg-card pl-2.5 pr-2 shadow-[0_10px_36px_rgba(0,0,0,0.14)] transition-[border-color,box-shadow] duration-300"
+            className="surface flex h-14 items-center gap-1.5 rounded-full border bg-card pl-2.5 pr-2 shadow-[0_14px_44px_rgba(0,0,0,0.22)] transition-[border-color,box-shadow] duration-300"
             style={{
               borderColor: glow ? glow.ring : "var(--border)",
               boxShadow: glow
-                ? `0 0 0 3px ${glow.soft}, 0 10px 36px rgba(0,0,0,0.16)`
-                : "0 10px 36px rgba(0,0,0,0.12)",
+                ? `0 0 0 3px ${glow.soft}, 0 14px 44px rgba(0,0,0,0.24)`
+                : "0 14px 44px rgba(0,0,0,0.18)",
             }}
           >
             <motion.button
@@ -159,14 +157,10 @@ export function Omnibar() {
               type="submit"
               whileTap={{ scale: 0.9 }}
               aria-label="Найти"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white transition-colors duration-300"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full transition-colors duration-300"
               style={{ background: glow ? glow.solid : "var(--text-primary)", color: glow ? "#fff" : "var(--bg)" }}
             >
-              {status === "routing" ? (
-                <SendHorizonal size={18} className="animate-pulse" />
-              ) : (
-                <ArrowUp size={19} strokeWidth={2.6} />
-              )}
+              {status === "routing" ? <SendHorizonal size={18} className="animate-pulse" /> : <ArrowUp size={19} strokeWidth={2.6} />}
             </motion.button>
           </form>
         </div>

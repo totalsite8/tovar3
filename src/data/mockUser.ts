@@ -23,13 +23,13 @@ export interface SpendRow {
 }
 
 export const EARN_ROWS: EarnRow[] = [
-  { icon: "🛍️", label: "Покупка через партнёра", value: "+50–200", tone: "ok" },
+  { icon: "🛍️", label: "Покупка через партнёра", value: "до 11%", tone: "ok" },
   { icon: "📅", label: "Ежедневный вход", value: "+5", tone: "ok" },
   { icon: "👥", label: "Пригласить друга", value: "+50", tone: "ok" },
 ];
 
 export const SPEND_ROWS: SpendRow[] = [
-  { icon: "🪟", label: "Запуск тендера (услуга)", value: "−100", tone: "service" },
+  { icon: "🧰", label: "Запуск подбора услуги", value: "−100", tone: "service" },
   { icon: "🔎", label: "Расширенный поиск", value: "−30", tone: "bad" },
   { icon: "🏷️", label: "Обмен на промокод", value: "по курсу", tone: "bad" },
 ];

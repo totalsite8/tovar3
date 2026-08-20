@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { ScenarioId } from "../data/mockTender";
 
 export type ThemePref = "light" | "dark" | "system";
 export type SearchMode = "product" | "gift" | "exact" | "service";
@@ -34,8 +35,8 @@ export interface TenderAnswers {
 
 const SEED_TX: Tx[] = [
   { id: "t1", delta: 5, label: "Ежедневный вход", when: "сегодня" },
-  { id: "t2", delta: 120, label: "Покупка наушников Sony", when: "2 дня назад" },
-  { id: "t3", delta: -100, label: "Запуск тендера: окна", when: "5 дней назад" },
+  { id: "t2", delta: 2584, label: "Кэшбэк: наушники AirPods", when: "2 дня назад" },
+  { id: "t3", delta: -100, label: "Подбор услуги: остекление", when: "5 дней назад" },
   { id: "t4", delta: 85, label: "Покупка чехла для телефона", when: "неделю назад" },
 ];
 
@@ -49,6 +50,8 @@ interface AuraState {
   searchMode: SearchMode;
   giftAnswers: GiftAnswers;
   tenderAnswers: TenderAnswers;
+  serviceScenario: ScenarioId | null;
+  serviceAnswers: Partial<TenderAnswers>;
   dailyClaimedAt: string | null;
   toast: ToastMsg | null;
   legalDoc: "terms" | "privacy" | null;
@@ -59,8 +62,9 @@ interface AuraState {
   setSearch: (q: string, m: SearchMode) => void;
   setGiftAnswer: (patch: Partial<GiftAnswers>) => void;
   resetGift: () => void;
-  setTenderAnswer: (patch: Partial<TenderAnswers>) => void;
-  resetTender: () => void;
+  setServiceScenario: (s: ScenarioId | null) => void;
+  setServiceAnswer: (patch: Partial<TenderAnswers>) => void;
+  resetService: () => void;
   addPoints: (n: number, label: string) => void;
   spendPoints: (n: number, label: string) => boolean;
   claimDaily: () => boolean;
@@ -83,6 +87,8 @@ export const useAppStore = create<AuraState>()(
       searchMode: "product",
       giftAnswers: { budget: null, hobby: null, hobbySummary: null, kind: null },
       tenderAnswers: { house: null, windows: null, balcony: null, budget: null },
+      serviceScenario: null,
+      serviceAnswers: {},
       dailyClaimedAt: null,
       toast: null,
       legalDoc: null,
@@ -109,12 +115,15 @@ export const useAppStore = create<AuraState>()(
       },
       resetGift: () =>
         set({ giftAnswers: { budget: null, hobby: null, hobbySummary: null, kind: null } }),
-      setTenderAnswer: (patch) => {
-        console.log("[Aura] Tender answer:", patch);
-        set((s) => ({ tenderAnswers: { ...s.tenderAnswers, ...patch } }));
+      setServiceScenario: (sc) => {
+        console.log("[Aura] Service scenario:", sc);
+        set({ serviceScenario: sc });
       },
-      resetTender: () =>
-        set({ tenderAnswers: { house: null, windows: null, balcony: null, budget: null } }),
+      setServiceAnswer: (patch: Partial<TenderAnswers>) => {
+        console.log("[Aura] Service answer:", patch);
+        set((s) => ({ serviceAnswers: { ...s.serviceAnswers, ...patch } }));
+      },
+      resetService: () => set({ serviceScenario: null, serviceAnswers: {} }),
 
       addPoints: (n, label) => {
         const next = get().points + n;
